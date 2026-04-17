@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rex Script — Where JavaScript Evolves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #090912;
+    --bg2:      #0f0f20;
+    --bg3:      #14142e;
+    --accent:   #ff4500;
+    --accent2:  #ff8c42;
+    --green:    #00ffb2;
+    --text:     #e8e8ff;
+    --dim:      #7070aa;
+    --border:   #222240;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 180px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(9, 9, 18, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--text);
+    letter-spacing: 0.12em;
+  }
+  .logo span { color: var(--accent); }
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2.5rem;
+  }
+  nav ul a {
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+    transition: color .2s;
+  }
+  nav ul a:hover { color: var(--text); }
+  .nav-btn {
+    background: var(--accent);
+    color: #fff !important;
+    padding: 0.45rem 1.2rem;
+    border-radius: 4px;
+    font-weight: 700;
+    transition: background .2s !important;
+  }
+  .nav-btn:hover { background: var(--accent2) !important; color: #fff !important; }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 7rem 2rem 4rem;
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,69,0,0.18) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.25rem 0.9rem;
+    border-radius: 100px;
+    letter-spacing: 0.12em;
+    margin-bottom: 1.5rem;
+    animation: fadein .8s ease both;
+  }
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(3rem, 9vw, 7.5rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    animation: fadein .9s .1s ease both;
+  }
+  h1 .accent { color: var(--accent); }
+  .hero-sub {
+    margin-top: 1.5rem;
+    font-size: 1.15rem;
+    color: var(--dim);
+    max-width: 520px;
+    line-height: 1.65;
+    animation: fadein .9s .2s ease both;
+  }
+  .hero-btns {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadein .9s .3s ease both;
+  }
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(255,69,0,0.35);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 30px rgba(255,69,0,0.5); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── HERO CODE PREVIEW ─── */
+  .hero-code-wrap {
+    position: relative;
+    margin-top: 3.5rem;
+    width: 100%;
+    max-width: 680px;
+    animation: fadein 1s .4s ease both;
+  }
+  .code-window {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    text-align: left;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .code-bar {
+    background: var(--bg3);
+    padding: 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .code-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--dim);
+    margin-left: auto;
+  }
+  pre {
+    padding: 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .c-kw   { color: var(--accent2); font-weight: 600; }
+  .c-fn   { color: #7eb8f7; }
+  .c-str  { color: var(--green); }
+  .c-num  { color: #f0a040; }
+  .c-op   { color: var(--accent); font-weight: 600; }
+  .c-cm   { color: var(--dim); font-style: italic; }
+  .c-ty   { color: #c792ea; }
+
+  /* ─── SECTION ─── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 2rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .section-lead {
+    font-size: 1.05rem;
+    color: var(--dim);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ─── FEATURES GRID ─── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .feature-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.75rem;
+    transition: border-color .2s, transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .feature-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+  .feature-card h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+  .feature-card p { font-size: 0.9rem; color: var(--dim); line-height: 1.6; }
+
+  /* ─── SYNTAX COMPARISON ─── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .compare-card.rex-card { border-color: var(--accent); }
+  .compare-head {
+    padding: 0.6rem 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--bg3);
+    letter-spacing: 0.08em;
+  }
+  .compare-head.js { color: var(--dim); }
+  .compare-head.rex { color: var(--accent); }
+  .compare-card pre { padding: 1.25rem; background: var(--bg2); font-size: 0.82rem; }
+
+  /* ─── KEYWORDS TABLE ─── */
+  .kw-table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th, td { padding: 0.8rem 1.2rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--dim); letter-spacing: 0.1em; background: var(--bg3); }
+  td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--accent2); font-weight: 600; }
+  td:nth-child(3) { font-family: 'JetBrains Mono', monospace; color: var(--green); font-size: 0.82rem; }
+  tr:hover td { background: rgba(255,69,0,0.04); }
+
+  /* ─── INSTALL ─── */
+  .install-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .install-step {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+  }
+  .step-num {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .install-step h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .install-step p { font-size: 0.85rem; color: var(--dim); margin-bottom: 0.5rem; }
+  .cmd {
+    display: block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--green);
+    cursor: pointer;
+    position: relative;
+    transition: border-color .15s;
+  }
+  .cmd:hover { border-color: var(--accent); }
+  .cmd::after {
+    content: 'copy';
+    position: absolute;
+    right: 0.75rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--dim);
+    position: relative;
+    z-index: 1;
+  }
+  footer .logo { font-size: 1rem; display: block; margin-bottom: 0.5rem; }
+
+  /* ─── ANIM ─── */
+  @keyframes fadein { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  .scroll-reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+  .scroll-reveal.visible { opacity: 1; transform: none; }
+
+  /* ─── DIVIDER ─── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">REX<span>.</span>SCRIPT</div>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#syntax">Syntax</a></li>
+    <li><a href="#keywords">Keywords</a></li>
+    <li><a href="#install">Get Started</a></li>
+    <li><a href="#install" class="nav-btn">Install</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-tag">v1.0 — Built on JavaScript</div>
+  <h1>REX<span class="accent">.</span><br>SCRIPT</h1>
+  <p class="hero-sub">A modern language that compiles to JavaScript — cleaner syntax, optional types, and powerful built-ins. All your favorite JS. None of the friction.</p>
+  <div class="hero-btns">
+    <a href="#install" class="btn btn-primary">Get Started</a>
+    <a href="#syntax" class="btn btn-ghost">See the Syntax →</a>
+  </div>
+  <div class="hero-code-wrap">
+    <div class="code-window">
+      <div class="code-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="code-filename">app.rex</span>
+      </div>
+<pre><span class="c-cm">// A simple Rex Script program</span>
+<span class="c-kw">fn</span> <span class="c-fn">greet</span>(name: <span class="c-ty">str</span>): <span class="c-ty">str</span> {
+  <span class="c-kw">give</span> <span class="c-str">`Hello, {name}! 🦖`</span>
+}
+
+<span class="c-kw">fn</span> <span class="c-fn">main</span>() {
+  <span class="c-kw">let</span> users = [<span class="c-str">"Alice"</span>, <span class="c-str">"Bob"</span>, <span class="c-str">"Carol"</span>]
+
+  users
+    <span class="c-op">|></span> filter(u <span class="c-op">=></span> u.length <span class="c-op">></span> <span class="c-num">3</span>)
+    <span class="c-op">|></span> map(greet)
+    <span class="c-op">|></span> log
+
+  <span class="c-kw">loop</span> i <span class="c-kw">in</span> <span class="c-num">1</span>..<span class="c-num">5</span> {
+    log(<span class="c-str">`Count: {i}`</span>)
+  }
+}</pre>
+    </div>
+  </div>
+</header>
+
+<hr class="divider">
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="scroll-reveal">
+      <p class="section-tag">// Why Rex Script</p>
+      <h2>Everything JS does.<br>Done better.</h2>
+      <p class="section-lead">Rex Script is JavaScript under the hood — it compiles cleanly and runs anywhere JS runs. You keep your libraries, your ecosystem, and your knowledge.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">⚡</div>
+        <h3>Concise Syntax</h3>
+        <p>New keywords like <code style="color:var(--accent2)">fn</code>, <code style="color:var(--accent2)">give</code>, and <code style="color:var(--accent2)">loop</code> replace verbose JavaScript constructs. Write 30% less boilerplate.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">🔒</div>
+        <h3>Optional Typing</h3>
+        <p>Add types when you need them. Skip them when you don't. Rex's gradual type system is inspired by TypeScript but lighter and built-in.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">🔗</div>
+        <h3>Pipeline Operator</h3>
+        <p>Chain calls cleanly with <code style="color:var(--accent)">|></code>. Data flows left to right — no more nested parentheses or temp variables.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">🛡️</div>
+        <h3>Null Safety</h3>
+        <p>The <code style="color:var(--accent)">exists</code> keyword and <code style="color:var(--accent)">?/</code> null-coalesce operator make null checks first-class and readable.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">📐</div>
+        <h3>Range Literals</h3>
+        <p><code style="color:var(--green)">1..10</code> creates a range. Use it in loops, slices, and comparisons without importing a library.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-icon">🔄</div>
+        <h3>100% JS Compatible</h3>
+        <p>Rex compiles to clean, readable JavaScript. Use any npm package. Call Rex from JS, or JS from Rex. Zero lock-in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SYNTAX COMPARISON -->
+<section id="syntax" style="background: var(--bg2);">
+  <div class="container">
+    <div class="scroll-reveal">
+      <p class="section-tag">// Syntax Changes</p>
+      <h2>Familiar, but evolved.</h2>
+      <p class="section-lead">If you know JavaScript, you already know most of Rex Script. The differences are small, deliberate, and always improve readability.</p>
+    </div>
+
+    <!-- Compare 1 -->
+    <div class="compare-grid scroll-reveal" style="margin-bottom:1.5rem">
+      <div class="compare-card">
+        <div class="compare-head js">// JavaScript</div>
+<pre><span style="color:var(--dim)">function greet(name) {
+  return "Hello, " + name;
+}
+
+const users = ["Alice", "Bob"];
+users.forEach(function(u) {
+  console.log(u);
+});</span></pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex">// Rex Script</div>
+<pre><span class="c-kw">fn</span> <span class="c-fn">greet</span>(name) {
+  <span class="c-kw">give</span> <span class="c-str">"Hello, " + name</span>
+}
+
+<span class="c-kw">let</span> users = [<span class="c-str">"Alice"</span>, <span class="c-str">"Bob"</span>]
+users <span class="c-op">|></span> forEach(u <span class="c-op">=></span> log(u))</pre>
+      </div>
+    </div>
+
+    <!-- Compare 2 -->
+    <div class="compare-grid scroll-reveal" style="margin-bottom:1.5rem">
+      <div class="compare-card">
+        <div class="compare-head js">// JavaScript</div>
+<pre><span style="color:var(--dim)">for (let i = 0; i < 10; i++) {
+  console.log(i);
+}
+
+const city = user
+  && user.address
+  && user.address.city
+  || "Unknown";</span></pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex">// Rex Script</div>
+<pre><span class="c-kw">loop</span> i <span class="c-kw">in</span> <span class="c-num">0</span>..<span class="c-num">9</span> {
+  log(i)
+}
+
+<span class="c-kw">let</span> city = user?.address?.city
+              <span class="c-op">?/</span> <span class="c-str">"Unknown"</span></pre>
+      </div>
+    </div>
+
+    <!-- Compare 3 -->
+    <div class="compare-grid scroll-reveal">
+      <div class="compare-card">
+        <div class="compare-head js">// JavaScript</div>
+<pre><span style="color:var(--dim)">if (x !== null && x !== undefined) {
+  process(x);
+}
+
+try {
+  throw new Error("oops");
+} catch (err) {
+  console.error(err);
+}</span></pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex">// Rex Script</div>
+<pre><span class="c-kw">if</span> x <span class="c-kw">exists</span> {
+  process(x)
+}
+
+<span class="c-kw">try!</span> {
+  <span class="c-kw">fail</span> <span class="c-str">"oops"</span>
+} <span class="c-kw">catch</span> err {
+  log.error(err)
+}</pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- KEYWORDS -->
+<section id="keywords">
+  <div class="container">
+    <div class="scroll-reveal">
+      <p class="section-tag">// Language Reference</p>
+      <h2>New Keywords &amp; Operators</h2>
+      <p class="section-lead">Every change Rex makes to JavaScript is deliberate. Here's a full table of what's new and what it replaces.</p>
+    </div>
+    <div class="kw-table-wrap scroll-reveal">
+      <table>
+        <thead>
+          <tr>
+            <th>Rex Keyword / Op</th>
+            <th>Replaces (JS)</th>
+            <th>Example</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>fn</td><td>function</td><td>fn add(a, b) { give a + b }</td><td>Works with async fn too</td></tr>
+          <tr><td>give</td><td>return</td><td>give x * 2</td><td>Cleaner, reads naturally</td></tr>
+          <tr><td>loop … in …</td><td>for loop</td><td>loop i in 0..9 { ... }</td><td>Supports range literals</td></tr>
+          <tr><td>exists</td><td>!== null &amp;&amp; !== undefined</td><td>if user exists { ... }</td><td>Boolean shorthand</td></tr>
+          <tr><td>|></td><td>chained method calls</td><td>data |> filter |> map</td><td>Pipeline operator</td></tr>
+          <tr><td>?/</td><td>??</td><td>name ?/ "Guest"</td><td>Null-coalesce, distinct symbol</td></tr>
+          <tr><td>fail</td><td>throw new Error()</td><td>fail "Bad input"</td><td>Auto-wraps string in Error</td></tr>
+          <tr><td>try!</td><td>try</td><td>try! { ... } catch e { ... }</td><td>Signals intent to handle errors</td></tr>
+          <tr><td>guard … else</td><td>if (!x) throw</td><td>guard res.ok else { fail "!" }</td><td>Early-exit assertions</td></tr>
+          <tr><td>match</td><td>switch</td><td>match x { 1 => "one" }</td><td>Expression-based, no fallthrough</td></tr>
+          <tr><td>1..10</td><td>manual loop bounds</td><td>loop i in 1..10</td><td>Inclusive range literal</td></tr>
+          <tr><td>type Alias = T</td><td>TypeScript type aliases</td><td>type UserId = str</td><td>Built-in, no compiler needed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- TYPE SYSTEM -->
+<section style="background: var(--bg2);">
+  <div class="container">
+    <div class="scroll-reveal">
+      <p class="section-tag">// Type System</p>
+      <h2>Types, your way.</h2>
+      <p class="section-lead">Rex Script's type system is fully optional. Annotate what matters, skip what doesn't. Types are inferred from context.</p>
+    </div>
+    <div style="max-width:660px; scroll-reveal">
+      <div class="code-window scroll-reveal">
+        <div class="code-bar">
+          <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+          <span class="code-filename">types.rex</span>
+        </div>
+<pre><span class="c-cm">// Primitive types: str, num, bool, any, void</span>
+<span class="c-kw">fn</span> <span class="c-fn">add</span>(a: <span class="c-ty">num</span>, b: <span class="c-ty">num</span>): <span class="c-ty">num</span> {
+  <span class="c-kw">give</span> a + b
+}
+
+<span class="c-cm">// Type aliases</span>
+<span class="c-kw">type</span> <span class="c-ty">UserId</span> = <span class="c-ty">str</span>
+<span class="c-kw">type</span> <span class="c-ty">Point</span>  = { x: <span class="c-ty">num</span>, y: <span class="c-ty">num</span> }
+
+<span class="c-cm">// Inferred — no annotation needed</span>
+<span class="c-kw">let</span> score = <span class="c-num">42</span>         <span class="c-cm">// inferred: num</span>
+<span class="c-kw">let</span> name  = <span class="c-str">"Rex"</span>     <span class="c-cm">// inferred: str</span>
+<span class="c-kw">let</span> flag  = <span class="c-kw">true</span>      <span class="c-cm">// inferred: bool</span>
+
+<span class="c-cm">// Typed function with optional param</span>
+<span class="c-kw">fn</span> <span class="c-fn">greet</span>(name: <span class="c-ty">str</span>, loud?: <span class="c-ty">bool</span>): <span class="c-ty">str</span> {
+  <span class="c-kw">let</span> msg = <span class="c-str">`Hello, {name}`</span>
+  <span class="c-kw">give</span> loud ? msg.upper() : msg
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="container" style="text-align:center">
+    <div class="scroll-reveal">
+      <p class="section-tag">// Get Started</p>
+      <h2>Install Rex Script</h2>
+      <p class="section-lead" style="margin:0 auto 3rem">Get up and running in under a minute. Rex Script requires Node.js 18+.</p>
+    </div>
+    <div class="install-box scroll-reveal">
+      <div class="install-step">
+        <div class="step-num">1</div>
+        <div>
+          <h4>Install the Rex compiler globally</h4>
+          <p>Requires Node.js 18+ and npm.</p>
+          <code class="cmd" onclick="navigator.clipboard.writeText('npm install -g rex-script')">npm install -g rex-script</code>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="step-num">2</div>
+        <div>
+          <h4>Create your first file</h4>
+          <p>Rex Script files use the <code style="color:var(--accent2)">.rex</code> extension.</p>
+          <code class="cmd" onclick="navigator.clipboard.writeText('echo \'fn main() { give log(&quot;Hello from Rex!&quot;) }\' > app.rex')">echo 'fn main() { give log("Hello!") }' > app.rex</code>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="step-num">3</div>
+        <div>
+          <h4>Run it</h4>
+          <p>Rex compiles and executes in one step.</p>
+          <code class="cmd" onclick="navigator.clipboard.writeText('rex run app.rex')">rex run app.rex</code>
+        </div>
+      </div>
+      <div class="install-step" style="margin-bottom:0">
+        <div class="step-num">4</div>
+        <div>
+          <h4>Compile to JavaScript</h4>
+          <p>Output clean, readable JS to deploy anywhere.</p>
+          <code class="cmd" onclick="navigator.clipboard.writeText('rex build app.rex --out dist/')">rex build app.rex --out dist/</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="logo">REX<span style="color:var(--accent)">.</span>SCRIPT</span>
+  Built with 🦖 on top of JavaScript &nbsp;·&nbsp; Open Source &nbsp;·&nbsp; MIT License
+</footer>
+
+<script>
+  // Scroll reveal
+  const els = document.querySelectorAll('.scroll-reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  els.forEach(el => io.observe(el));
+
+  // Copy command feedback
+  document.querySelectorAll('.cmd').forEach(el => {
+    el.addEventListener('click', () => {
+      el.style.borderColor = 'var(--green)';
+      el.style.color = 'var(--green)';
+      const orig = el.style.cssText;
+      setTimeout(() => { el.style.borderColor = ''; el.style.color = 'var(--green)'; }, 1000);
+    });
+  });
+</script>
+</body>
+</html>
