@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output (rex build)
+dist/
+
+# Test coverage (Istanbul / Node --experimental-test-coverage)
+coverage/
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.*
+
+# Source maps
+*.js.map

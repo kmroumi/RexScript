@@ -1,0 +1,17 @@
+{
+  "name": "rexscript",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A compiler for Rex Script (.rex files) that targets JavaScript",
+  "author": "Khaleefa, Jackson M, Ahmad",
+  "bin": {
+    "rex": "./src/rexscript.js"
+  },
+  "scripts": {
+    "test": "node --test --experimental-test-coverage test/*.test.js"
+  },
+  "dependencies": {
+    "graph-stringify": "^1.1.0",
+    "ohm-js": "^17.1.0"
+  }
+}
