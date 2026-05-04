@@ -1,0 +1,181 @@
+RexScript {
+
+  Program      = Statement*
+
+  Statement    = FunctionDecl
+               | VariableDecl
+               | TypeDecl
+               | IfStmt
+               | LoopStmt
+               | MatchStmt
+               | GuardStmt
+               | TryStmt
+               | FailStmt
+               | ReturnStmt
+               | ExpStmt
+
+  FunctionDecl = async? fn id "(" Params? ")" ReturnType?  Block
+  Params       = Param ("," Param)*
+  Param        = id "?"? ":" Type
+  ReturnType   = ":" Type
+
+  VariableDecl = let id (":" Type)? "=" Expression
+
+  TypeDecl     = type id "=" Type
+
+  IfStmt       = if Expression Block ElseIf* Else?
+  ElseIf       = else if Expression Block
+  Else         = else Block
+
+  LoopStmt     = loop id in Expression ".." Expression Block
+
+  MatchStmt    = match Expression "{" MatchArm+ "}"
+  MatchArm     = MatchPattern "=>" MatchBody
+  MatchPattern = wildcard
+               | Expression
+  MatchBody    = Block
+               | Expression
+
+  GuardStmt    = guard Expression else Block
+
+  TryStmt      = try Block catch id Block
+
+  FailStmt     = fail Expression
+  ReturnStmt   = give Expression
+  ExpStmt      = Expression
+
+  Block        = "{" Statement* "}"
+
+  Expression        = PipelineExp
+
+  PipelineExp       = PipelineExp pipeline TernaryExp             -- pipe
+                    | TernaryExp
+
+  TernaryExp        = LogicalOrExp "?" Expression ":" Expression  -- tern
+                    | LogicalOrExp
+
+  LogicalOrExp      = LogicalOrExp "||" LogicalAndExp             -- or
+                    | LogicalAndExp
+
+  LogicalAndExp     = LogicalAndExp "&&" CoalesceExp              -- and
+                    | CoalesceExp
+
+  CoalesceExp       = CoalesceExp nullcoal EqualityExp            -- coal
+                    | EqualityExp
+
+  EqualityExp       = EqualityExp eqop RelationalExp              -- eq
+                    | RelationalExp
+
+  RelationalExp     = RelationalExp relop AdditiveExp             -- rel
+                    | AdditiveExp
+
+  AdditiveExp       = AdditiveExp addop MultiplicativeExp         -- add
+                    | MultiplicativeExp
+
+  MultiplicativeExp = MultiplicativeExp mulop UnaryExp            -- mul
+                    | UnaryExp
+
+  UnaryExp          = "!" UnaryExp                                -- not
+                    | "-" UnaryExp                                -- neg
+                    | await UnaryExp                              -- await
+                    | ExistsExp
+
+  ExistsExp         = PostfixExp exists                           -- exists
+                    | PostfixExp
+
+  PostfixExp        = PostfixExp "(" Arguments? ")"               -- call
+                    | PostfixExp optchain id                      -- optchain
+                    | PostfixExp "." id                           -- member
+                    | PostfixExp "[" Expression "]"               -- index
+                    | PrimaryExp
+
+  Arguments      = Expression ("," Expression)*
+
+  PrimaryExp     = ArrowFn
+                 | "(" Expression ")"                             -- paren
+                 | ArrayLit
+                 | ObjectLit
+                 | templateLit
+                 | stringLit
+                 | numberLit
+                 | boolLit
+                 | id                                             -- id
+
+  ArrowFn        = ArrowParams "=>" ArrowBody
+  ArrowParams    = id                                             -- single
+                 | "(" ArrowIdentList? ")"                        -- parens
+  ArrowIdentList = id ("," id)*
+  ArrowBody      = Block
+                 | Expression
+
+  ArrayLit       = "[" ArrayElts? "]"
+  ArrayElts      = Expression ("," Expression)* ","?
+
+  ObjectLit      = "{" ObjFields? "}"
+  ObjFields      = ObjField ("," ObjField)* ","?
+  ObjField       = objKey ":" Expression
+  objKey         = id | stringLit
+
+  Type           = ObjectType
+                 | TypeName
+  TypeName       = str | num | bool | any_ | void | id
+  ObjectType     = "{" TypeFields? "}"
+  TypeFields     = TypeField ("," TypeField)* ","?
+  TypeField      = id ":" Type
+
+  numberLit    = digit+ ("." digit+)?
+  boolLit      = true | false
+  stringLit    = "\"" dqChar* "\""                                -- dq
+               | "'"  sqChar* "'"                                 -- sq
+  dqChar       = "\\" any                                         -- esc
+               | ~("\"" | "\n") any                               -- plain
+  sqChar       = "\\" any                                         -- esc
+               | ~("'"  | "\n") any                               -- plain
+  templateLit  = "`" tmplPart* "`"
+  tmplPart     = "{" applySyntactic<Expression> "}"               -- interp
+               | "\\" any                                         -- esc
+               | ~("`" | "{" | "\\") any                          -- char
+  wildcard     = "_" ~alnum
+
+  relop    = "<=" | ">=" | "<" | ">"
+  addop    = "+" | "-"
+  mulop    = "*" | "/" | "%"
+  eqop     = "===" | "!=="
+  pipeline = "->"
+  nullcoal = "?/"
+  optchain = "?."
+
+  fn     = "fn"     ~alnum
+  give   = "give"   ~alnum
+  let    = "let"    ~alnum
+  loop   = "loop"   ~alnum
+  in     = "in"     ~alnum
+  match  = "match"  ~alnum
+  guard  = "guard"  ~alnum
+  else   = "else"   ~alnum
+  fail   = "fail"   ~alnum
+  exists = "exists" ~alnum
+  async  = "async"  ~alnum
+  await  = "await"  ~alnum
+  type   = "type"   ~alnum
+  true   = "true"   ~alnum
+  false  = "false"  ~alnum
+  try    = "try!"   ~alnum
+  catch  = "catch"  ~alnum
+  void   = "void"   ~alnum
+  any_   = "any"    ~alnum
+  str    = "str"    ~alnum
+  num    = "num"    ~alnum
+  bool   = "bool"   ~alnum
+  if     = "if"     ~alnum
+
+  keyword = fn | give | let | loop | in | match | guard | else
+          | fail | exists | async | await | type | true | false
+          | try | catch | void | any_ | str | num | bool | if
+
+  id = ~keyword letter alnum*
+
+  space       += comment | blockComment
+  comment      = "//" (~"\n" any)*
+  blockComment = "/*" (~"*/" any)* "*/"
+}

@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RexScript. JavaScript, evolved.</title>
+<link rel="icon" href="RexScript_logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    /* Pulled from the logo */
+    --navy-900: #070b1c;
+    --navy-800: #0d1530;
+    --navy-700: #131c3d;
+    --navy-600: #1c2752;
+    --navy-500: #2a3668;
+    --line:     #1f2a55;
+
+    --orange:   #ff6a1f;   /* logo body */
+    --orange-2: #ff8a3d;   /* highlight */
+    --peach:    #ffb088;   /* soft accent */
+    --accent-rgb: 255,106,31;
+    --teeth:    #f5f7ff;   /* near-white from teeth */
+
+    --ink:      #eef1ff;
+    --ink-2:    #c5cce8;
+    --muted:    #7a86b8;
+    --dim:      #4a5689;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--navy-800);
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ── Subtle starfield (matches the sparkles in the logo) ── */
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 14% 22%, rgba(255,255,255,0.5) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 78% 14%, rgba(255,138,61,0.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 64% 68%, rgba(255,255,255,0.4) 50%, transparent 51%),
+      radial-gradient(1px 1px at 32% 84%, rgba(255,255,255,0.35) 50%, transparent 51%),
+      radial-gradient(2px 2px at 88% 56%, rgba(255,176,136,0.55) 50%, transparent 51%),
+      radial-gradient(1px 1px at 8% 60%, rgba(255,255,255,0.3) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 48% 30%, rgba(255,138,61,0.5) 50%, transparent 51%);
+    background-size: 100% 100%;
+    opacity: 0.9;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 2rem;
+    background: rgba(7, 11, 28, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .nav-logo img { height: 34px; width: 34px; object-fit: contain; }
+  .nav-logo .wm {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
+  .nav-logo .wm span { color: var(--orange); }
+  nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  nav ul a {
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color .15s;
+  }
+  nav ul a:hover, nav ul a.nav-active { color: var(--ink); }
+  .nav-btn {
+    background: var(--orange);
+    color: var(--navy-900) !important;
+    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: transform .15s, box-shadow .15s, background .15s !important;
+    box-shadow: 0 4px 16px rgba(255,106,31,0.25);
+  }
+  .nav-btn:hover {
+    background: var(--orange-2) !important;
+    color: var(--navy-900) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255,106,31,0.4);
+  }
+  @media (max-width: 880px) {
+    nav ul li:not(:last-child) { display: none; }
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    padding: 8rem 2rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 1;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, rgba(255,106,31,0.18) 0%, rgba(255,106,31,0.06) 35%, transparent 65%);
+    top: 38%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--peach);
+    background: rgba(255,106,31,0.08);
+    border: 1px solid rgba(255,106,31,0.4);
+    padding: 0.4rem 0.95rem;
+    border-radius: 100px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .hero-tag .pulse {
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 var(--orange);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,106,31,0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(255,106,31,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,106,31,0); }
+  }
+
+  .hero-logo {
+    margin: 1.75rem 0 1.25rem;
+    width: clamp(220px, 32vw, 320px);
+    height: auto;
+    filter: drop-shadow(0 12px 40px rgba(255,106,31,0.35));
+    animation: rise 1s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: none; } }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.4rem, 5.6vw, 4.4rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    max-width: 14ch;
+    margin: 0.25rem auto 0;
+  }
+  .hero h1 .accent {
+    color: var(--orange);
+    font-style: italic;
+    font-weight: 600;
+  }
+  .hero-sub {
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    color: var(--ink-2);
+    max-width: 540px;
+    line-height: 1.6;
+  }
+
+  .hero-btns {
+    margin-top: 2.25rem;
+    display: flex;
+    gap: 0.85rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.6rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    transition: transform .15s, box-shadow .15s, background .15s, border-color .15s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: var(--navy-900);
+    box-shadow: 0 6px 24px rgba(255,106,31,0.3);
+  }
+  .btn-primary:hover {
+    background: var(--orange-2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255,106,31,0.45);
+  }
+  .btn-ghost {
+    background: rgba(255,255,255,0.03);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    transform: translateY(-2px);
+  }
+  .btn .arrow { transition: transform .15s; }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  /* ── HERO CODE PREVIEW ── */
+  .hero-code-wrap {
+    position: relative;
+    margin-top: 4rem;
+    width: 100%;
+    max-width: 720px;
+  }
+  /* (decorative bracket flourishes removed; were being misread as slide arrows) */
+
+  .code-window {
+    background: var(--navy-900);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    text-align: left;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+  .code-bar {
+    background: var(--navy-700);
+    padding: 0.7rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .code-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .code-filename::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--orange);
+  }
+  pre {
+    padding: 1.5rem 1.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    color: var(--ink-2);
+    font-variant-ligatures: none;
+    -webkit-font-feature-settings: "liga" 0, "calt" 0;
+            font-feature-settings: "liga" 0, "calt" 0;
+  }
+  code, .cmd, td, th {
+    font-variant-ligatures: none;
+    -webkit-font-feature-settings: "liga" 0, "calt" 0;
+            font-feature-settings: "liga" 0, "calt" 0;
+  }
+  .c-kw  { color: var(--orange); font-weight: 500; }
+  .c-fn  { color: #82a8ff; }
+  .c-str { color: #6fdc9d; }
+  .c-num { color: var(--peach); }
+  .c-op  { color: var(--orange-2); font-weight: 500; }
+  .c-cm  { color: var(--dim); font-style: italic; }
+  .c-ty  { color: #c79bff; }
+
+  /* ── SECTIONS ── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 7rem 2rem;
+  }
+  .container { max-width: 1140px; margin: 0 auto; }
+
+  .section-head { margin-bottom: 3.5rem; max-width: 640px; }
+  .section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--orange);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-tag::before,
+  .section-tag::after {
+    content: '';
+    width: 22px; height: 1px;
+    background: var(--orange);
+  }
+  h2 {
+    font-size: clamp(1.9rem, 3.6vw, 2.75rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  h2 .accent { color: var(--orange); font-style: italic; font-weight: 600; }
+  .section-lead {
+    font-size: 1.05rem;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+
+  /* ── FEATURES GRID ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .feature-card {
+    background: var(--navy-900);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.75rem;
+    transition: border-color .2s, transform .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card:hover {
+    border-color: rgba(255,106,31,0.6);
+    transform: translateY(-3px);
+    background: var(--navy-700);
+  }
+  .feature-card .feature-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--orange);
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.1em;
+  }
+  .feature-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .feature-card p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .feature-card code {
+    color: var(--orange-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: rgba(255,106,31,0.08);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+  }
+
+  /* ── STORY ── */
+  .story-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+  @media (max-width: 880px) { .story-grid { grid-template-columns: 1fr; gap: 2.5rem; } }
+  .story-text p {
+    font-size: 1.02rem;
+    color: var(--ink-2);
+    line-height: 1.75;
+    margin-bottom: 1.25rem;
+  }
+  .story-text p:last-child { margin-bottom: 0; }
+  .story-text code {
+    color: var(--orange-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+  }
+  .story-visual {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .story-visual img {
+    width: 80%;
+    height: auto;
+    filter: drop-shadow(0 16px 50px rgba(var(--accent-rgb),0.28));
+  }
+
+  /* ── SYNTAX COMPARE ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 720px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--navy-900);
+  }
+  .compare-card.rex-card { border-color: rgba(255,106,31,0.45); }
+  .compare-head {
+    padding: 0.6rem 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: var(--navy-700);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .compare-head .swatch {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+  .compare-head.js  { color: var(--muted); }
+  .compare-head.js  .swatch { background: var(--muted); }
+  .compare-head.rex { color: var(--orange); }
+  .compare-head.rex .swatch { background: var(--orange); }
+  .compare-card pre { padding: 1.25rem 1.5rem; font-size: 0.82rem; }
+  .compare-card pre.js-code { color: var(--muted); }
+  /* JS tokens, muted versions to signal "the old way" */
+  .j-kw  { color: #a89aff; font-weight: 500; }
+  .j-fn  { color: #7a9bd6; }
+  .j-str { color: #6fa97d; }
+  .j-num { color: #c79b7a; }
+  .j-op  { color: #b8a880; }
+  .j-cm  { color: var(--dim); font-style: italic; }
+
+  /* ── KEYWORDS TABLE ── */
+  .kw-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--navy-900);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+  th, td {
+    padding: 0.95rem 1.4rem;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--navy-700);
+    font-weight: 500;
+  }
+  td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--orange);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  td:nth-child(2) {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  td:nth-child(3) {
+    font-family: 'JetBrains Mono', monospace;
+    color: #6fdc9d;
+    font-size: 0.83rem;
+  }
+  td:nth-child(4) { color: var(--ink-2); font-size: 0.88rem; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover td { background: rgba(255,106,31,0.04); }
+
+  /* ── CHECKS ── */
+  .checks-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.85rem;
+  }
+  .check-item {
+    flex: 1 1 280px;
+    max-width: 360px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1.1rem 1.25rem;
+    background: var(--navy-900);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color .15s, background .15s;
+  }
+  .check-item:hover {
+    border-color: rgba(255,106,31,0.4);
+    background: var(--navy-700);
+  }
+  .check-mark {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(255,106,31,0.12);
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .check-item p {
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .check-item code {
+    color: var(--orange-2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+  }
+
+  /* ── INSTALL ── */
+  .install-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .install-grid > * { min-width: 0; }
+  @media (max-width: 720px) { .install-grid { grid-template-columns: 1fr; } }
+  .install-step {
+    background: var(--navy-900);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: border-color .15s;
+  }
+  .install-step:hover { border-color: rgba(255,106,31,0.4); }
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+  .step-num {
+    background: var(--orange);
+    color: var(--navy-900);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+  .install-step h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .install-step p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0 0 0.85rem 0;
+  }
+  .cmd {
+    display: block;
+    background: var(--navy-800);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.7rem 1rem;
+    padding-right: 4.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: #6fdc9d;
+    cursor: pointer;
+    position: relative;
+    transition: border-color .15s;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .cmd:hover { border-color: var(--orange); }
+  .cmd::before { content: '$ '; color: var(--muted); }
+  .cmd::after {
+    content: 'COPY';
+    position: absolute;
+    right: 0.65rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    background: var(--navy-700);
+    padding: 0.2rem 0.45rem;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+  .cmd.cmd-copied::after {
+    content: 'COPIED';
+    color: var(--navy-900);
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+
+  /* ── TYPE SHOWCASE ── */
+  .types-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* ── TEAM (editorial roster) ── */
+  .team-roster {
+    max-width: 720px;
+    margin: 0 auto;
+    border-top: 1px solid var(--line);
+  }
+  .team-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: baseline;
+    gap: 1.5rem;
+    padding: 1.75rem 0.5rem;
+    border-bottom: 1px solid var(--line);
+    transition: padding .25s ease, background .25s ease;
+    position: relative;
+  }
+  .team-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: var(--orange);
+    transition: width .25s ease;
+  }
+  .team-row:hover {
+    padding-left: 1.25rem;
+  }
+  .team-row:hover::before {
+    width: 3px;
+  }
+  .team-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--orange);
+    letter-spacing: 0.08em;
+    font-feature-settings: "tnum";
+  }
+  .team-name {
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  .team-name em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--peach);
+  }
+  .team-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  @media (max-width: 600px) {
+    .team-row {
+      grid-template-columns: 60px 1fr;
+      gap: 1rem;
+      row-gap: 0.35rem;
+    }
+    .team-meta { grid-column: 2; }
+  }
+
+  /* ── CTA ── */
+  .cta {
+    text-align: center;
+    background:
+      radial-gradient(ellipse 80% 70% at 50% 50%, rgba(var(--accent-rgb),0.14) 0%, transparent 70%);
+    padding: 6rem 2rem;
+  }
+  .cta img {
+    width: clamp(140px, 18vw, 200px);
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 8px 24px rgba(var(--accent-rgb),0.3));
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    position: relative;
+    z-index: 1;
+    background:
+      radial-gradient(ellipse 80% 100% at 50% -20%, rgba(var(--accent-rgb),0.08) 0%, transparent 60%);
+  }
+  footer .foot-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
+  }
+  footer .foot-logo img { width: 24px; height: 24px; }
+  footer .foot-logo span { font-weight: 600; color: var(--ink); }
+  footer .foot-logo span em { color: var(--orange); font-style: normal; }
+  footer a { color: var(--orange); text-decoration: none; }
+  footer a:hover { color: var(--orange-2); }
+
+  /* ── REVEAL ── */
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .scroll-reveal.visible { opacity: 1; transform: none; }
+
+  /* ── TWEAK: COLOR MOODS ── */
+  body[data-mood="lava"] {
+    --orange: #ff4422;
+    --orange-2: #ff7755;
+    --peach: #ffaa88;
+    --accent-rgb: 255,68,34;
+    --navy-800: #1a0a14;
+    --navy-900: #0a0408;
+    --navy-700: #2a0e1c;
+    --navy-600: #3a1228;
+    --line: #4a1830;
+  }
+  body[data-mood="synthwave"] {
+    --orange: #c44dff;
+    --orange-2: #d97aff;
+    --peach: #ffb3f0;
+    --accent-rgb: 196,77,255;
+    --navy-800: #0f0a2e;
+    --navy-900: #07041a;
+    --navy-700: #1a1245;
+    --navy-600: #261d5e;
+    --line: #2e2466;
+  }
+  body[data-mood="forest"] {
+    --orange: #5dd47b;
+    --orange-2: #7ce097;
+    --peach: #b8e6c5;
+    --accent-rgb: 93,212,123;
+    --navy-800: #0a1a14;
+    --navy-900: #050d0a;
+    --navy-700: #112a1f;
+    --navy-600: #1a3d2e;
+    --line: #1f4a36;
+  }
+
+  /* ── TWEAK: SURFACE DENSITY ── */
+  body[data-surface="glassy"] .feature-card,
+  body[data-surface="glassy"] .check-item,
+  body[data-surface="glassy"] .install-step,
+  body[data-surface="glassy"] .compare-card,
+  body[data-surface="glassy"] .code-window,
+  body[data-surface="glassy"] .kw-table-wrap {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  body[data-surface="glassy"] .compare-head,
+  body[data-surface="glassy"] .code-bar,
+  body[data-surface="glassy"] th {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  body[data-surface="editor"] .feature-card,
+  body[data-surface="editor"] .check-item,
+  body[data-surface="editor"] .install-step,
+  body[data-surface="editor"] .compare-card,
+  body[data-surface="editor"] .code-window,
+  body[data-surface="editor"] .kw-table-wrap {
+    background: #000;
+    border-color: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    box-shadow: none;
+  }
+  body[data-surface="editor"] .compare-head,
+  body[data-surface="editor"] .code-bar,
+  body[data-surface="editor"] th {
+    background: #050505;
+    border-radius: 0;
+  }
+  body[data-surface="editor"] .feature-card:hover,
+  body[data-surface="editor"] .check-item:hover,
+  body[data-surface="editor"] .install-step:hover {
+    background: #0a0a0a;
+  }
+  body[data-surface="editor"] {
+    background: #0a0a0a;
+  }
+
+  /* ── TWEAK: MASCOT ENERGY ── */
+  body[data-energy="roar"] .hero-logo {
+    width: clamp(280px, 42vw, 420px);
+    animation: rise 1s cubic-bezier(.2,.8,.2,1) both, breathe 3.5s ease-in-out infinite 1s;
+    filter: drop-shadow(0 16px 60px rgba(255,106,31,0.55)) drop-shadow(0 0 24px rgba(255,106,31,0.3));
+  }
+  body[data-energy="roar"] .hero::before {
+    width: 1200px; height: 1200px;
+    background: radial-gradient(circle, rgba(255,106,31,0.3) 0%, rgba(255,106,31,0.1) 35%, transparent 65%);
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+
+  body[data-energy="roar"] .stars {
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  body[data-energy="roar"] h1 .accent,
+  body[data-energy="roar"] h2 .accent {
+    text-shadow: 0 0 24px rgba(255,106,31,0.5), 0 0 1px rgba(255,106,31,0.3);
+  }
+  body[data-energy="roar"] .hero-tag {
+    animation: tagShake 0.6s ease-in-out infinite alternate;
+  }
+
+  body[data-energy="zen"] .hero-logo {
+    width: clamp(170px, 22vw, 220px);
+    opacity: 0.85;
+    filter: drop-shadow(0 4px 16px rgba(255,106,31,0.15)) saturate(0.7);
+  }
+  body[data-energy="zen"] .hero::before {
+    opacity: 0.4;
+  }
+  body[data-energy="zen"] .stars { opacity: 0.4; }
+  body[data-energy="zen"] .hero h1 { letter-spacing: -0.04em; font-weight: 500; }
+  body[data-energy="zen"] h2 { font-weight: 600; }
+  body[data-energy="zen"] .hero-tag .pulse { animation: none; opacity: 0.5; }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.04); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+    50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.08); }
+  }
+  @keyframes bracketPulseL {
+    0%, 100% { transform: translateY(-50%) translateX(0); opacity: 0.55; }
+    50%      { transform: translateY(-50%) translateX(-6px); opacity: 0.9; }
+  }
+  @keyframes bracketPulseR {
+    0%, 100% { transform: translateY(-50%) translateX(0); opacity: 0.55; }
+    50%      { transform: translateY(-50%) translateX(6px); opacity: 0.9; }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.9; }
+    50%      { opacity: 0.5; }
+  }
+  @keyframes tagShake {
+    from { transform: translateX(0); }
+    to   { transform: translateX(1px); }
+  }
+
+  /* selection */
+  ::selection { background: var(--orange); color: var(--navy-900); }
+
+  /* scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--navy-900); }
+  ::-webkit-scrollbar-thumb { background: var(--navy-600); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+</style>
+</head>
+<body>
+
+<div class="stars" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#top" class="nav-logo">
+    <img src="RexScript_logo.png" alt="RexScript">
+    <span class="wm">Rex<span>Script</span></span>
+  </a>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#story">Origin</a></li>
+    <li><a href="#syntax">Syntax</a></li>
+    <li><a href="#keywords">Reference</a></li>
+    <li><a href="#install">Install</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="https://github.com/kmroumi/RexScript" class="nav-btn">GitHub →</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <img src="RexScript_logo.png" alt="RexScript logo" class="hero-logo">
+  <h1>JavaScript, <span class="accent">evolved.</span></h1>
+  <p class="hero-sub">A modern language that compiles to JavaScript. Cleaner syntax, optional types, and powerful built-ins. All your favorite JS. None of the friction.</p>
+  <div class="hero-btns">
+    <a href="#install" class="btn btn-primary">Get started <span class="arrow">→</span></a>
+    <a href="#syntax" class="btn btn-ghost">See the syntax</a>
+  </div>
+
+  <div class="hero-code-wrap scroll-reveal">
+    <div class="code-window">
+      <div class="code-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+
+      </div>
+<pre><span class="c-cm">// Pipelines, arrow fns, chained calls</span>
+<span class="c-kw">fn</span> <span class="c-fn">double</span>(n: <span class="c-ty">num</span>): <span class="c-ty">num</span> {
+  <span class="c-kw">give</span> n * <span class="c-num">2</span>
+}
+
+<span class="c-kw">fn</span> <span class="c-fn">addTen</span>(n: <span class="c-ty">num</span>): <span class="c-ty">num</span> {
+  <span class="c-kw">give</span> n + <span class="c-num">10</span>
+}
+
+<span class="c-kw">fn</span> <span class="c-fn">square</span>(n: <span class="c-ty">num</span>): <span class="c-ty">num</span> {
+  <span class="c-kw">give</span> n * n
+}
+
+<span class="c-kw">fn</span> <span class="c-fn">describe</span>(n: <span class="c-ty">num</span>): <span class="c-ty">str</span> {
+  <span class="c-kw">give</span> <span class="c-str">`Result is {n}`</span>
+}
+
+<span class="c-cm">// Multi-step chained pipeline: 3 -> 6 -> 36 -> 46</span>
+<span class="c-kw">let</span> processed = <span class="c-num">3</span> <span class="c-op">-></span> double <span class="c-op">-></span> square <span class="c-op">-></span> addTen
+
+<span class="c-cm">// Pipeline into a descriptor function</span>
+<span class="c-kw">let</span> label = processed <span class="c-op">-></span> describe
+
+console.log(label)</pre>
+    </div>
+  </div>
+</header>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-head scroll-reveal">
+      <p class="section-tag">Why RexScript</p>
+      <h2 style="text-wrap: balance">Everything JS does.&nbsp;<span class="accent">Done better.</span></h2>
+      <p class="section-lead">RexScript is JavaScript under the hood. It compiles cleanly and runs anywhere JS runs. You keep your libraries, your ecosystem, your knowledge.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">01 / Syntax</div>
+        <h3>Concise by design</h3>
+        <p>New keywords like <code>fn</code>, <code>give</code>, and <code>loop</code> replace verbose JavaScript constructs. Write 30% less boilerplate.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">02 / Types</div>
+        <h3>Optional, gradual typing</h3>
+        <p>Add types when you need them. Skip them when you don't. Lighter than TypeScript, and built right in.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">03 / Flow</div>
+        <h3>Pipeline operator</h3>
+        <p>Chain calls cleanly with <code>-&gt;</code>. Data flows left to right, with no more nested parentheses.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">04 / Safety</div>
+        <h3>Null safety, first class</h3>
+        <p>The <code>exists</code> keyword and <code>?/</code> null-coalesce operator make null checks readable and explicit.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">05 / Ergonomics</div>
+        <h3>Range literals</h3>
+        <p><code>1..10</code> creates a range. Use it in loops, slices, and comparisons without importing a library.</p>
+      </div>
+      <div class="feature-card scroll-reveal">
+        <div class="feature-num">06 / Compat</div>
+        <h3>100% JS compatible</h3>
+        <p>Compiles to clean, readable JS. Use any npm package. Call Rex from JS, or JS from Rex. Zero lock-in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section id="story">
+  <div class="container">
+    <div class="story-grid">
+      <div class="story-text scroll-reveal">
+        <p class="section-tag">Origin</p>
+        <h2 style="margin-bottom:1.5rem">Why RexScript exists.</h2>
+        <p>JavaScript is everywhere, but its syntax has sharp edges that trip up even experienced developers. Verbose function declarations, null checks that span entire lines, switch statements that fall through by default. These aren't bugs; they're design decisions that made sense decades ago. We write code today, not in 1995.</p>
+        <p>RexScript files those edges down. Not by replacing JavaScript, but by sitting cleanly on top of it. Every <code>.rex</code> file compiles to readable JavaScript that runs anywhere Node.js runs. Your libraries, your ecosystem, your knowledge: all intact.</p>
+        <p>Built by a team of students who love JavaScript but wanted something better. RexScript is the language we wished we had.</p>
+      </div>
+      <div class="story-visual scroll-reveal" aria-hidden="true">
+        <img src="RexScript_logo.png" alt="">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SYNTAX COMPARE -->
+<section id="syntax">
+  <div class="container">
+    <div class="section-head scroll-reveal">
+      <p class="section-tag">Syntax</p>
+      <h2>Familiar, but <span class="accent">evolved.</span></h2>
+      <p class="section-lead">If you know JavaScript, you already know most of RexScript. The differences are small, deliberate, and always improve readability.</p>
+    </div>
+
+    <div class="compare-grid scroll-reveal" style="margin-bottom:1rem">
+      <div class="compare-card">
+        <div class="compare-head js"><span class="swatch"></span>JavaScript</div>
+<pre class="js-code"><span class="j-kw">function</span> <span class="j-fn">greet</span>(name) {
+  <span class="j-kw">return</span> <span class="j-str">"Hello, "</span> <span class="j-op">+</span> name;
+}
+
+<span class="j-kw">const</span> users <span class="j-op">=</span> [<span class="j-str">"Alice"</span>, <span class="j-str">"Bob"</span>];
+users.<span class="j-fn">forEach</span>(<span class="j-kw">function</span>(u) {
+  console.<span class="j-fn">log</span>(u);
+});</pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex"><span class="swatch"></span>RexScript</div>
+<pre><span class="c-kw">fn</span> <span class="c-fn">greet</span>(name: <span class="c-ty">str</span>): <span class="c-ty">str</span> {
+  <span class="c-kw">give</span> <span class="c-str">`Hello, {name}`</span>
+}
+
+<span class="c-kw">let</span> users = [<span class="c-str">"Alice"</span>, <span class="c-str">"Bob"</span>]
+users <span class="c-op">-></span> forEach(u <span class="c-op">=></span> log(u))</pre>
+      </div>
+    </div>
+
+    <div class="compare-grid scroll-reveal" style="margin-bottom:1rem">
+      <div class="compare-card">
+        <div class="compare-head js"><span class="swatch"></span>JavaScript</div>
+<pre class="js-code"><span class="j-kw">for</span> (<span class="j-kw">let</span> i <span class="j-op">=</span> <span class="j-num">0</span>; i <span class="j-op">&lt;</span> <span class="j-num">10</span>; i<span class="j-op">++</span>) {
+  console.<span class="j-fn">log</span>(i);
+}
+
+<span class="j-kw">const</span> city <span class="j-op">=</span> user
+  <span class="j-op">&amp;&amp;</span> user.address
+  <span class="j-op">&amp;&amp;</span> user.address.city
+  <span class="j-op">||</span> <span class="j-str">"Unknown"</span>;</pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex"><span class="swatch"></span>RexScript</div>
+<pre><span class="c-kw">loop</span> i <span class="c-kw">in</span> <span class="c-num">0</span>..<span class="c-num">9</span> {
+  log(i)
+}
+
+<span class="c-kw">let</span> city = user?.address?.city
+              <span class="c-op">?/</span> <span class="c-str">"Unknown"</span></pre>
+      </div>
+    </div>
+
+    <div class="compare-grid scroll-reveal">
+      <div class="compare-card">
+        <div class="compare-head js"><span class="swatch"></span>JavaScript</div>
+<pre class="js-code"><span class="j-kw">if</span> (x <span class="j-op">!==</span> <span class="j-kw">null</span> <span class="j-op">&amp;&amp;</span> x <span class="j-op">!==</span> <span class="j-kw">undefined</span>) {
+  <span class="j-fn">process</span>(x);
+}
+
+<span class="j-kw">try</span> {
+  <span class="j-kw">throw new</span> <span class="j-fn">Error</span>(<span class="j-str">"oops"</span>);
+} <span class="j-kw">catch</span> (err) {
+  console.<span class="j-fn">error</span>(err);
+}</pre>
+      </div>
+      <div class="compare-card rex-card">
+        <div class="compare-head rex"><span class="swatch"></span>RexScript</div>
+<pre><span class="c-kw">if</span> x <span class="c-kw">exists</span> {
+  process(x)
+}
+
+<span class="c-kw">try!</span> {
+  <span class="c-kw">fail</span> <span class="c-str">"oops"</span>
+} <span class="c-kw">catch</span> err {
+  log.error(err)
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEYWORDS -->
+<section id="keywords">
+  <div class="container">
+    <div class="section-head scroll-reveal">
+      <p class="section-tag">Reference</p>
+      <h2>New keywords <span class="accent">&amp;</span> operators</h2>
+      <p class="section-lead">Every change RexScript makes to JavaScript is deliberate. Here's a full table of what's new and what it replaces.</p>
+    </div>
+    <div class="kw-table-wrap scroll-reveal">
+      <table>
+        <thead>
+          <tr>
+            <th>Rex</th>
+            <th>Replaces</th>
+            <th>Example</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>fn</td><td>function</td><td>fn add(a, b) { give a + b }</td><td>Works with async fn too</td></tr>
+          <tr><td>give</td><td>return</td><td>give x * 2</td><td>Cleaner, reads naturally</td></tr>
+          <tr><td>loop … in …</td><td>for loop</td><td>loop i in 0..9 { ... }</td><td>Supports range literals</td></tr>
+          <tr><td>exists</td><td>!== null &amp;&amp; !== undefined</td><td>if user exists { ... }</td><td>Boolean shorthand</td></tr>
+          <tr><td>-&gt;</td><td>chained calls</td><td>data -&gt; filter -&gt; map</td><td>Pipeline operator</td></tr>
+          <tr><td>?/</td><td>??</td><td>name ?/ "Guest"</td><td>Null-coalesce, distinct symbol</td></tr>
+          <tr><td>fail</td><td>throw new Error()</td><td>fail "Bad input"</td><td>Auto-wraps string in Error</td></tr>
+          <tr><td>try!</td><td>try</td><td>try! { ... } catch e { ... }</td><td>Signals intent to handle errors</td></tr>
+          <tr><td>guard … else</td><td>if (!x) throw</td><td>guard res.ok else { fail "!" }</td><td>Early-exit assertions</td></tr>
+          <tr><td>match</td><td>switch</td><td>match x { 1 =&gt; "one" }</td><td>Statement-based, no fallthrough</td></tr>
+          <tr><td>1..10</td><td>manual bounds</td><td>loop i in 1..10</td><td>Inclusive range literal</td></tr>
+          <tr><td>type</td><td>TS type alias</td><td>type UserId = str</td><td>Built-in, no extra compiler</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TYPE SHOWCASE -->
+<section>
+  <div class="container">
+    <div class="section-head center scroll-reveal">
+      <p class="section-tag" style="justify-content:center">Type System</p>
+      <h2>Types, <span class="accent">your way.</span></h2>
+      <p class="section-lead">Fully optional. Annotate what matters, skip what doesn't. Types are inferred from context.</p>
+    </div>
+    <div class="types-wrap scroll-reveal">
+      <div class="code-window">
+        <div class="code-bar">
+          <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        </div>
+<pre><span class="c-cm">// Primitive types: str, num, bool, any, void</span>
+<span class="c-kw">fn</span> <span class="c-fn">add</span>(a: <span class="c-ty">num</span>, b: <span class="c-ty">num</span>): <span class="c-ty">num</span> {
+  <span class="c-kw">give</span> a + b
+}
+
+<span class="c-cm">// Type aliases</span>
+<span class="c-kw">type</span> <span class="c-ty">UserId</span> = <span class="c-ty">str</span>
+<span class="c-kw">type</span> <span class="c-ty">Point</span>  = { x: <span class="c-ty">num</span>, y: <span class="c-ty">num</span> }
+
+<span class="c-cm">// Inferred. No annotation needed</span>
+<span class="c-kw">let</span> score = <span class="c-num">42</span>         <span class="c-cm">// inferred: num</span>
+<span class="c-kw">let</span> name  = <span class="c-str">"Rex"</span>     <span class="c-cm">// inferred: str</span>
+<span class="c-kw">let</span> flag  = <span class="c-kw">true</span>      <span class="c-cm">// inferred: bool</span>
+
+<span class="c-cm">// Typed function with optional param</span>
+<span class="c-kw">fn</span> <span class="c-fn">greet</span>(name: <span class="c-ty">str</span>, loud?: <span class="c-ty">bool</span>): <span class="c-ty">str</span> {
+  <span class="c-kw">let</span> msg = <span class="c-str">`Hello, {name}`</span>
+  <span class="c-kw">give</span> loud ? msg.toUpperCase() : msg
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATIC CHECKS -->
+<section id="checks">
+  <div class="container">
+    <div class="section-head scroll-reveal">
+      <p class="section-tag">Static Analysis</p>
+      <h2>What the compiler <span class="accent">catches.</span></h2>
+      <p class="section-lead">RexScript's static analyzer enforces these rules at compile time, before your code ever runs.</p>
+    </div>
+    <div class="checks-grid">
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>Variables must be declared before use</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>No redeclaration in the same scope</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p><code>give</code> must appear inside a function body</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p><code>await</code> must appear inside an async function</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>Argument count must match declaration</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p><code>match</code> wildcard <code>_</code> must be the last arm</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p><code>guard</code> else block must <code>fail</code> or <code>give</code></p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>Type alias names share the variable scope — redeclaration is an error</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>Loop variable is scoped to the loop body</p></div>
+      <div class="check-item scroll-reveal"><span class="check-mark">✓</span><p>Typed parameters and return values on all functions</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <div class="container">
+    <div class="section-head center scroll-reveal">
+      <p class="section-tag" style="justify-content:center">Get Started</p>
+      <h2>Install <span class="accent">RexScript</span></h2>
+      <p class="section-lead">Up and running in under a minute. Requires Node.js 18+.</p>
+    </div>
+    <div class="install-grid scroll-reveal">
+      <div class="install-step">
+        <div class="step-head">
+          <div class="step-num">1</div>
+          <h4>Clone the repo</h4>
+        </div>
+        <p>Grab the source from GitHub.</p>
+        <code class="cmd" data-copy="git clone https://github.com/kmroumi/RexScript.git">git clone https://github.com/kmroumi/RexScript.git</code>
+      </div>
+      <div class="install-step">
+        <div class="step-head">
+          <div class="step-num">2</div>
+          <h4>Install deps</h4>
+        </div>
+        <p>Requires Node.js 18+ and npm.</p>
+        <code class="cmd" data-copy="cd rexscript && npm install">cd rexscript &amp;&amp; npm install</code>
+      </div>
+      <div class="install-step">
+        <div class="step-head">
+          <div class="step-num">3</div>
+          <h4>Run a Rex file</h4>
+        </div>
+        <p>RexScript compiles and executes in one step.</p>
+        <code class="cmd" data-copy="rex run app.rex">rex run app.rex</code>
+      </div>
+      <div class="install-step">
+        <div class="step-head">
+          <div class="step-num">4</div>
+          <h4>Compile to JS</h4>
+        </div>
+        <p>Output clean, readable JS to deploy anywhere.</p>
+        <code class="cmd" data-copy="rex build app.rex --out dist/">rex build app.rex --out dist/</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="container">
+    <div class="section-head scroll-reveal">
+      <p class="section-tag">The Team</p>
+      <h2>The people behind <span class="accent">RexScript.</span></h2>
+      <p class="section-lead">Three engineers who love JavaScript and wanted something better.</p>
+    </div>
+    <div class="team-roster">
+      <div class="team-row scroll-reveal">
+        <div class="team-num">01</div>
+        <div class="team-name">Jackson M</div>
+      </div>
+      <div class="team-row scroll-reveal">
+        <div class="team-num">02</div>
+        <div class="team-name">Khaleefa</div>
+      </div>
+      <div class="team-row scroll-reveal">
+        <div class="team-num">03</div>
+        <div class="team-name">Ahmad</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <img src="RexScript_logo.png" alt="">
+  <h2 style="max-width:18ch; margin: 0 auto 1rem">Ready to write <span class="accent">cleaner</span> JavaScript?</h2>
+  <p class="section-lead" style="margin: 0 auto 2rem; max-width: 480px">Open source, MIT licensed, and free to use.</p>
+  <div class="hero-btns" style="justify-content:center; margin-top:0">
+    <a href="#install" class="btn btn-primary">Install now <span class="arrow">→</span></a>
+    <a href="https://github.com/kmroumi/RexScript" class="btn btn-ghost">View on GitHub</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">
+    <img src="RexScript_logo.png" alt="">
+    <span>Rex<em>Script</em></span>
+  </div>
+  <div>Built on top of JavaScript &nbsp;·&nbsp; Open Source &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; <a href="https://github.com/kmroumi/RexScript">GitHub</a></div>
+</footer>
+
+<div id="tweaks-root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "mood": "lava",
+    "surface": "glassy",
+    "energy": "roar"
+  }/*EDITMODE-END*/;
+
+  function TweaksApp() {
+    const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+    React.useEffect(() => {
+      document.body.dataset.mood = t.mood;
+      document.body.dataset.surface = t.surface;
+      document.body.dataset.energy = t.energy;
+    }, [t.mood, t.surface, t.energy]);
+
+    return (
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Color Mood" />
+        <TweakRadio
+          label="Palette"
+          value={t.mood}
+          options={[
+            { value: 'inferno',   label: 'Inferno' },
+            { value: 'lava',      label: 'Lava' },
+            { value: 'synthwave', label: 'Synth' },
+            { value: 'forest',    label: 'Forest' }
+          ]}
+          onChange={(v) => setTweak('mood', v)}
+        />
+
+        <TweakSection label="Surface Style" />
+        <TweakRadio
+          label="Surface"
+          value={t.surface}
+          options={[
+            { value: 'cards',  label: 'Cards' },
+            { value: 'glassy', label: 'Glassy' },
+            { value: 'editor', label: 'Editor' }
+          ]}
+          onChange={(v) => setTweak('surface', v)}
+        />
+
+        <TweakSection label="Mascot Energy" />
+        <TweakRadio
+          label="Vibe"
+          value={t.energy}
+          options={[
+            { value: 'zen',  label: 'Zen' },
+            { value: 'tame', label: 'Tame' },
+            { value: 'roar', label: 'Roar' }
+          ]}
+          onChange={(v) => setTweak('energy', v)}
+        />
+      </TweaksPanel>
+    );
+  }
+
+  // Set initial state from defaults so the page reflects them on load
+  document.body.dataset.mood = TWEAK_DEFAULTS.mood;
+  document.body.dataset.surface = TWEAK_DEFAULTS.surface;
+  document.body.dataset.energy = TWEAK_DEFAULTS.energy;
+
+  ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<TweaksApp />);
+</script>
+
+<script>
+  // Scroll reveal
+  const els = document.querySelectorAll('.scroll-reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  els.forEach(el => io.observe(el));
+
+  // Stagger reveal for grid children
+  document.querySelectorAll('.features-grid, .checks-grid, .team-roster, .install-grid')
+    .forEach(grid => {
+      [...grid.children].forEach((child, i) => {
+        if (child.classList.contains('scroll-reveal')) {
+          child.style.transitionDelay = (i * 60) + 'ms';
+        }
+      });
+    });
+
+  // Nav active state
+  const navLinks = document.querySelectorAll('nav ul a[href^="#"]');
+  const sections = document.querySelectorAll('section[id], header[id]');
+  const navObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('nav-active'));
+        const active = document.querySelector(`nav ul a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('nav-active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => navObserver.observe(s));
+
+  // Copy command
+  document.querySelectorAll('.cmd').forEach(el => {
+    el.addEventListener('click', () => {
+      const text = el.dataset.copy || el.textContent.trim();
+      navigator.clipboard.writeText(text).catch(() => {});
+      el.classList.add('cmd-copied');
+      setTimeout(() => el.classList.remove('cmd-copied'), 1200);
+    });
+  });
+</script>
+</body>
+</html>
